@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String         @id @default(uuid()) @db.Uuid
+  email           String         @unique @db.VarChar(255)
+  username        String?        @unique @db.VarChar(100)
+  displayName     String?        @db.VarChar(255)
+  avatarUrl       String?        @db.Text
+  bio             String?        @db.Text
+  socialLinks     Json           @default("{}")
+  planType        String         @default("free") @db.VarChar(50)
+  creditsBalance  Int            @default(5)
+  isActive        Boolean        @default(true)
+  isAdmin         Boolean        @default(false)
+  lastActiveAt    DateTime?      
+  createdAt       DateTime       @default(now()) 
+  updatedAt       DateTime       @updatedAt 
+
+  workspaces      Workspace[]
+  projects        Project[]
+  canvases        Canvas[]
+  characters      Character[]
+  generationJobs  GenerationJob[]
+  subscriptions   Subscription[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(255)
+  slug          String   @unique @db.VarChar(255)
+  ownerId       String?  @db.Uuid
+  logoUrl       String?  @db.Text
+  brandColor    String?  @db.VarChar(7)
+  customDomain  String?  @db.VarChar(255)
+  isWhiteLabel  Boolean  @default(false)
+  settings      Json     @default("{}")
+  createdAt     DateTime @default(now()) 
+  updatedAt     DateTime @updatedAt 
+
+  owner         User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  projects      Project[]
+  characters    Character[]
+  auditLogs     AuditLog[]
+
+  @@map("workspaces")
+}
+
+model Project {
+  id              String           @id @default(uuid()) @db.Uuid
+  workspaceId     String?          @db.Uuid
+  name            String           @db.VarChar(255)
+  description     String?          @db.Text
+  thumbnailUrl    String?          @db.Text
+  status          String           @default("draft") @db.VarChar(50)
+  settings        Json             @default("{}")
+  createdById     String?          @db.Uuid
+  createdAt       DateTime         @default(now()) 
+  updatedAt       DateTime         @updatedAt 
+
+  workspace       Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy       User?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  canvases        Canvas[]
+  generationJobs  GenerationJob[]
+
+  @@map("projects")
+}
+
+model Canvas {
+  id            String   @id @default(uuid()) @db.Uuid
+  projectId     String?  @db.Uuid
+  name          String   @db.VarChar(255)
+  nodes         Json     @default("[]")
+  edges         Json     @default("[]")
+  viewport      Json     @default("{\"x\": 0, \"y\": 0, \"zoom\": 1}")
+  createdById   String?  @db.Uuid
+  createdAt     DateTime @default(now()) 
+  updatedAt     DateTime @updatedAt 
+
+  project       Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy     User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@map("canvases")
+}
+
+model Character {
+  id              String   @id @default(uuid()) @db.Uuid
+  workspaceId     String?  @db.Uuid
+  name            String   @db.VarChar(255)
+  referenceImages Json     @default("[]")
+  trainedModelId  String?  @db.VarChar(255)
+  settings        Json     @default("{}")
+  createdById     String?  @db.Uuid
+  createdAt       DateTime @default(now()) 
+  updatedAt       DateTime @updatedAt 
+
+  workspace       Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy       User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@map("characters")
+}
+
+model GenerationJob {
+  id            String    @id @default(uuid()) @db.Uuid
+  projectId     String?   @db.Uuid
+  userId        String?   @db.Uuid
+  modelId       String    @db.VarChar(255)
+  inputType     String?   @db.VarChar(50)
+  inputData     Json      @default("{}")
+  parameters    Json      @default("{}")
+  status        String    @default("pending") @db.VarChar(50)
+  resultUrls    Json      @default("[]")
+  errorMessage  String?   @db.Text
+  creditsUsed   Int       @default(0)
+  createdAt     DateTime  @default(now()) 
+  completedAt   DateTime? 
+  expiresAt     DateTime? 
+
+  project       Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("generation_jobs")
+}
+
+model Subscription {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @db.Uuid
+  planId                String    @db.VarChar(50)
+  status                String    @default("active") @db.VarChar(50)
+  creditsAllowance      Int?
+  billingCycle          String?   @db.VarChar(20)
+  currentPeriodStart    DateTime? 
+  currentPeriodEnd      DateTime? 
+  cancelAtPeriodEnd     Boolean   @default(false)
+  stripeSubscriptionId  String?   @db.VarChar(255)
+  createdAt             DateTime  @default(now()) 
+  updatedAt             DateTime  @updatedAt 
+
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  workspaceId   String?  @db.Uuid
+  userId        String?  @db.Uuid
+  action        String   @db.VarChar(100)
+  resourceType  String?  @db.VarChar(50)
+  resourceId    String?  @db.Uuid
+  details       Json     @default("{}")
+  ipAddress     String?  @db.Inet
+  userAgent     String?  @db.Text
+  createdAt     DateTime @default(now()) 
+
+  workspace     Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
