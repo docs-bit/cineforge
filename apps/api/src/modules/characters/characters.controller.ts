@@ -2,6 +2,7 @@ import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards } from '@n
 import { SupabaseAuthGuard } from '../../common/guards/supabase-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user';
 import { CharactersService } from './characters.service';
+import { CreateCharacterDto } from './dto/create-character.dto';
 
 @Controller('api/v1/characters')
 @UseGuards(SupabaseAuthGuard)
@@ -14,7 +15,7 @@ export class CharactersController {
   }
 
   @Post()
-  create(@CurrentUser('id') userId: string, @Body() dto: { name: string; workspaceId?: string }) {
+  create(@CurrentUser('id') userId: string, @Body() dto: CreateCharacterDto) {
     return this.charactersService.create(userId, dto);
   }
 

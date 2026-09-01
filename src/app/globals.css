@@ -48,10 +48,10 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* CineForge brand colors — cinema-grade palette */
-  --color-gold: #C9A84C;
-  --color-gold-hover: #DFBA52;
-  --color-gold-muted: #C9A84C25;
-  --color-gold-dim: #8B6914;
+  --color-gold: #B9F33D;
+  --color-gold-hover: #CBFF65;
+  --color-gold-muted: #B9F33D25;
+  --color-gold-dim: #5F8D27;
   --color-surface: #0F0F1A;
   --color-surface-hover: #16162A;
   --color-surface-elevated: #1A1A30;
@@ -65,19 +65,19 @@
   --card-foreground: oklch(0.91 0.01 280);
   --popover: oklch(0.14 0.015 270);
   --popover-foreground: oklch(0.91 0.01 280);
-  --primary: oklch(0.72 0.1 85);
-  --primary-foreground: oklch(0.15 0 0);
+  --primary: oklch(0.86 0.2 120);
+  --primary-foreground: oklch(0.15 0.02 120);
   --secondary: oklch(0.2 0.01 270);
   --secondary-foreground: oklch(0.91 0.01 280);
   --muted: oklch(0.2 0.01 270);
   --muted-foreground: oklch(0.55 0.02 280);
-  --accent: oklch(0.72 0.1 85);
-  --accent-foreground: oklch(0.15 0 0);
+  --accent: oklch(0.86 0.2 120);
+  --accent-foreground: oklch(0.15 0.02 120);
   --destructive: oklch(0.6 0.15 25);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.72 0.1 85);
-  --chart-1: oklch(0.75 0.12 85);
+  --ring: oklch(0.86 0.2 120);
+  --chart-1: oklch(0.86 0.2 120);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
@@ -85,12 +85,12 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.12 0.01 275);
   --sidebar-foreground: oklch(0.91 0.01 280);
-  --sidebar-primary: oklch(0.72 0.1 85);
-  --sidebar-primary-foreground: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.86 0.2 120);
+  --sidebar-primary-foreground: oklch(0.15 0.02 120);
   --sidebar-accent: oklch(0.18 0.015 270);
   --sidebar-accent-foreground: oklch(0.91 0.01 280);
   --sidebar-border: oklch(1 0 0 / 6%);
-  --sidebar-ring: oklch(0.72 0.1 85);
+  --sidebar-ring: oklch(0.86 0.2 120);
   --font-heading: "Playfair Display", serif;
 }
 

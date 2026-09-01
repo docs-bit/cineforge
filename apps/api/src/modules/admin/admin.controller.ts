@@ -1,11 +1,13 @@
-import { Controller, Get, Put, Body, Param, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, UseGuards } from '@nestjs/common';
+import { AdminGuard } from '../../common/guards/admin.guard';
 import { SupabaseAuthGuard } from '../../common/guards/supabase-auth.guard';
+import { ModelsService } from '../models/models.service';
 import { AdminService } from './admin.service';
 
 @Controller('api/v1/admin')
-@UseGuards(SupabaseAuthGuard)
+@UseGuards(SupabaseAuthGuard, AdminGuard)
 export class AdminController {
-  constructor(private adminService: AdminService) {}
+  constructor(private adminService: AdminService, private modelsService: ModelsService) {}
 
   @Get('users')
   listUsers() {
@@ -13,7 +15,12 @@ export class AdminController {
   }
 
   @Put('users/:id')
-  updateUser(@Param('id') id: string, @Body() dto: { isActive?: boolean; isAdmin?: boolean }) {
-    return this.adminService.updateUser(id, dto);
+  updateUser(@Param('id') id: string, @Body() body: { isActive?: boolean; isAdmin?: boolean }) {
+    return this.adminService.updateUser(id, body);
+  }
+
+  @Get('models')
+  listModels() {
+    return this.modelsService.findAllForAdmin();
   }
 }

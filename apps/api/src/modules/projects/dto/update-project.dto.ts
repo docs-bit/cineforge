@@ -1,15 +1,18 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class UpdateProjectDto {
-  @IsString()
   @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
   name?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
+  @MaxLength(2000)
   description?: string;
 
-  @IsString()
   @IsOptional()
+  @IsIn(['draft', 'generating', 'ready', 'archived'])
   status?: string;
 }

@@ -1,14 +1,21 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsObject, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
 
 export class CreateProjectDto {
   @IsString()
+  @MinLength(1)
+  @MaxLength(255)
   name!: string;
 
-  @IsString()
   @IsOptional()
+  @IsUUID()
   workspaceId?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
+  @MaxLength(2000)
   description?: string;
+
+  @IsOptional()
+  @IsObject()
+  settings?: Record<string, unknown>;
 }

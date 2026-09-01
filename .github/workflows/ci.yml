@@ -1,0 +1,53 @@
+name: CineForge CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/cineforge_test
+      SUPABASE_URL: https://test.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: test-service-role-key
+      CORS_ORIGIN: http://localhost:3000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/api/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: npm ci
+
+      - name: Validate Prisma schema
+        working-directory: apps/api
+        run: npx prisma validate
+
+      - name: Run API E2E tests
+        working-directory: apps/api
+        run: npm run test:e2e -- --runInBand
+
+      - name: Build API
+        run: npm run build:api
+
+      - name: Build frontend
+        run: npm run build

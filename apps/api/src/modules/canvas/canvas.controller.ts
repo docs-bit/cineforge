@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { SupabaseAuthGuard } from '../../common/guards/supabase-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user';
 import { CanvasService } from './canvas.service';
+import { CreateCanvasDto, UpdateCanvasDto } from './dto/canvas.dto';
 
 @Controller('api/v1/canvases')
 @UseGuards(SupabaseAuthGuard)
@@ -14,8 +16,8 @@ export class CanvasController {
   }
 
   @Post()
-  create(@CurrentUser('id') userId: string, @Body() dto: { name: string; projectId?: string }) {
-    return this.canvasService.create(userId, dto);
+  create(@CurrentUser('id') userId: string, @Body() dto: CreateCanvasDto) {
+    return this.canvasService.create(userId, { ...dto, nodes: dto.nodes as Prisma.InputJsonValue | undefined, edges: dto.edges as Prisma.InputJsonValue | undefined, viewport: dto.viewport as Prisma.InputJsonValue | undefined });
   }
 
   @Get(':id')
@@ -24,7 +26,7 @@ export class CanvasController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @CurrentUser('id') userId: string, @Body() dto: { nodes?: any; edges?: any; viewport?: any; name?: string }) {
-    return this.canvasService.update(id, userId, dto);
+  update(@Param('id') id: string, @CurrentUser('id') userId: string, @Body() dto: UpdateCanvasDto) {
+    return this.canvasService.update(id, userId, { ...dto, nodes: dto.nodes as Prisma.InputJsonValue | undefined, edges: dto.edges as Prisma.InputJsonValue | undefined, viewport: dto.viewport as Prisma.InputJsonValue | undefined });
   }
 }
