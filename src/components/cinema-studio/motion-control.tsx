@@ -21,7 +21,8 @@ function MotionSlotEditor({
   presetId: string;
   speed: SpeedVariation;
 }) {
-  const { updateMotion, removeMotion } = useCinemaStudioStore();
+  const updateMotion = useCinemaStudioStore((s) => s.updateMotion);
+  const removeMotion = useCinemaStudioStore((s) => s.removeMotion);
   const preset = CAMERA_PRESETS.find((p) => p.id === presetId);
 
   return (
@@ -80,7 +81,8 @@ function MotionSlotEditor({
 }
 
 export function MotionControl() {
-  const { motions, addMotion } = useCinemaStudioStore();
+  const motions = useCinemaStudioStore((s) => s.camera.motions);
+  const addMotion = useCinemaStudioStore((s) => s.addMotion);
   const canAdd = motions.length < MAX_MOTIONS;
 
   return (
@@ -145,7 +147,7 @@ export function MotionControl() {
               ? "Single motion"
               : motions.length === 2
                 ? "Dual motion stack"
-                : "Triple motion stack — cinematic richness"}
+                : "Triple motion stack \u2014 cinematic richness"}
           </span>
         </div>
       )}

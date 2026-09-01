@@ -35,10 +35,7 @@ function GradingSlider({
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <label
-          htmlFor={id}
-          className="text-[10px] text-muted-foreground"
-        >
+        <label htmlFor={id} className="text-[10px] text-muted-foreground">
           {field.label}
         </label>
         <span className="text-[10px] font-mono text-muted-foreground/60 tabular-nums">
@@ -61,8 +58,10 @@ function GradingSlider({
 }
 
 export function ColorGradingPanel() {
-  const { version, colorGrading, setColorGrading, resetColorGrading } =
-    useCinemaStudioStore();
+  const version = useCinemaStudioStore((s) => s.version);
+  const colorGrading = useCinemaStudioStore((s) => s.style.colorGrading);
+  const setColorGrading = useCinemaStudioStore((s) => s.setColorGrading);
+  const resetColorGrading = useCinemaStudioStore((s) => s.resetColorGrading);
 
   const isLocked = version === "2.0";
 

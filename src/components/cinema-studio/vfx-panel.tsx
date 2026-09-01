@@ -7,7 +7,8 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
 
 export function VFXPanel() {
-  const { selectedEffects, toggleEffect } = useCinemaStudioStore();
+  const selectedEffects = useCinemaStudioStore((s) => s.style.selectedEffects);
+  const toggleEffect = useCinemaStudioStore((s) => s.toggleEffect);
   const [search, setSearch] = useState("");
   const [openCategory, setOpenCategory] = useState<string | null>("particles");
   const [confirmClear, setConfirmClear] = useState(false);
@@ -42,7 +43,7 @@ export function VFXPanel() {
         />
         <input
           type="text"
-          placeholder="Search effects…"
+          placeholder="Search effects..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-md bg-surface pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-gold"

@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import { useCinemaStudioStore } from "@/stores/cinema-studio-store";
 import { GENRES, SPEED_VARIATIONS } from "@/constants/genres";
-import type { Genre, SpeedVariation } from "@/types/cinema-studio";
 import {
   Tooltip,
   TooltipContent,
@@ -11,7 +10,8 @@ import {
 } from "@/components/ui/tooltip";
 
 function GenreSelector() {
-  const { genre, setGenre } = useCinemaStudioStore();
+  const genre = useCinemaStudioStore((s) => s.style.genre);
+  const updateStyle = useCinemaStudioStore((s) => s.updateStyle);
 
   return (
     <div className="space-y-2">
@@ -22,7 +22,7 @@ function GenreSelector() {
         {GENRES.map((g) => (
           <button
             key={g.id}
-            onClick={() => setGenre(g.id)}
+            onClick={() => updateStyle({ genre: g.id })}
             className={cn(
               "flex flex-col items-center gap-1 rounded-md p-2 text-xs transition-colors",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
@@ -44,7 +44,8 @@ function GenreSelector() {
 }
 
 function SpeedSelector() {
-  const { speed, setSpeed } = useCinemaStudioStore();
+  const speed = useCinemaStudioStore((s) => s.style.speed);
+  const updateStyle = useCinemaStudioStore((s) => s.updateStyle);
 
   return (
     <div className="space-y-2">
@@ -56,7 +57,7 @@ function SpeedSelector() {
           <Tooltip key={s.id}>
             <TooltipTrigger>
               <button
-                onClick={() => setSpeed(s.id)}
+                onClick={() => updateStyle({ speed: s.id })}
                 className={cn(
                   "rounded-md px-2.5 py-1.5 text-xs font-medium text-left transition-colors",
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",

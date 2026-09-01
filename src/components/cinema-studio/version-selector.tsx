@@ -13,7 +13,8 @@ const VERSION_MIN: Record<string, number> = {
 };
 
 export function VersionSelector() {
-  const { version, setVersion } = useCinemaStudioStore();
+  const version = useCinemaStudioStore((s) => s.version);
+  const setVersion = useCinemaStudioStore((s) => s.setVersion);
 
   return (
     <div

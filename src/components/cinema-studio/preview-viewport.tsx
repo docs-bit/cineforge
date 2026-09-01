@@ -5,15 +5,12 @@ import { useCinemaStudioStore } from "@/stores/cinema-studio-store";
 import { Play, Pause, SkipForward, Maximize2, Camera, AlertCircle, RotateCcw } from "lucide-react";
 
 export function PreviewViewport() {
-  const {
-    generationStatus,
-    generationProgress,
-    generationError,
-    generationResultUrls,
-    resolution,
-    aspectRatio,
-    resetGeneration,
-  } = useCinemaStudioStore();
+  const generation = useCinemaStudioStore((s) => s.generation);
+  const resolution = useCinemaStudioStore((s) => s.output.resolution);
+  const aspectRatio = useCinemaStudioStore((s) => s.output.aspectRatio);
+  const resetGeneration = useCinemaStudioStore((s) => s.resetGeneration);
+
+  const { status: generationStatus, progress: generationProgress, error: generationError, resultUrls: generationResultUrls } = generation;
 
   const isGenerating =
     generationStatus === "pending" || generationStatus === "processing";
@@ -64,7 +61,7 @@ export function PreviewViewport() {
                 Configure settings & generate a scene
               </p>
               <p className="mt-1 text-[10px] text-muted-foreground/30">
-                {resolution} • {aspectRatio}
+                {resolution} &bull; {aspectRatio}
               </p>
             </div>
           </div>

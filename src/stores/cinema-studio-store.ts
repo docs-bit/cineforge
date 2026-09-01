@@ -17,6 +17,40 @@ import type {
   FrameRate,
 } from "@/types/cinema-studio";
 
+// ─── Sub-object interfaces ────────────────────────────────────────
+
+export interface CameraSettings {
+  sensorProfile: SensorProfile;
+  focalLength: FocalLength;
+  aperture: ApertureStop;
+  cameraPresetId: string | null;
+  cameraPresetName: string | null;
+  motions: MotionSlot[];
+}
+
+export interface StyleSettings {
+  genre: Genre;
+  speed: SpeedVariation;
+  selectedEffects: string[];
+  colorGrading: ColorGradingSettings;
+}
+
+export interface OutputSettings {
+  resolution: Resolution;
+  aspectRatio: AspectRatio;
+  frameRate: FrameRate;
+}
+
+export interface GenerationState {
+  status: GenerationStatus;
+  progress: number;
+  error: string | null;
+  jobId: string | null;
+  resultUrls: string[];
+}
+
+// ─── API response type ───────────────────────────────────────────
+
 interface GenerationJobResponse {
   id: string;
   status: string;
@@ -24,48 +58,41 @@ interface GenerationJobResponse {
   errorMessage?: string;
 }
 
+// ─── Top-level state ─────────────────────────────────────────────
+
 interface CinemaStudioState {
+  // Domain data
   version: CinemaVersion;
+  prompt: string;
+  camera: CameraSettings;
+  style: StyleSettings;
+  output: OutputSettings;
+  generation: GenerationState;
+
+  // Domain setters
   setVersion: (v: CinemaVersion) => void;
-  sensorProfile: SensorProfile;
-  focalLength: FocalLength;
-  aperture: ApertureStop;
-  cameraPresetId: string | null;
-  setSensorProfile: (p: SensorProfile) => void;
-  setFocalLength: (l: FocalLength) => void;
-  setAperture: (a: ApertureStop) => void;
-  setCameraPreset: (id: string | null) => void;
-  motions: MotionSlot[];
+  setPrompt: (p: string) => void;
+  updateCamera: (partial: Partial<CameraSettings>) => void;
+  updateStyle: (partial: Partial<StyleSettings>) => void;
+  updateOutput: (partial: Partial<OutputSettings>) => void;
+
+  // Camera motion helpers
   addMotion: (motion: MotionSlot) => void;
   removeMotion: (index: number) => void;
   updateMotion: (index: number, motion: Partial<MotionSlot>) => void;
-  genre: Genre;
-  speed: SpeedVariation;
-  setGenre: (g: Genre) => void;
-  setSpeed: (s: SpeedVariation) => void;
-  selectedEffects: string[];
+
+  // Style helpers
   toggleEffect: (effectId: string) => void;
-  colorGrading: ColorGradingSettings;
   setColorGrading: (settings: Partial<ColorGradingSettings>) => void;
   resetColorGrading: () => void;
-  prompt: string;
-  setPrompt: (p: string) => void;
-  resolution: Resolution;
-  aspectRatio: AspectRatio;
-  frameRate: FrameRate;
-  setResolution: (r: Resolution) => void;
-  setAspectRatio: (a: AspectRatio) => void;
-  setFrameRate: (f: FrameRate) => void;
-  generationStatus: GenerationStatus;
-  generationProgress: number;
-  generationError: string | null;
-  generationResultUrls: string[];
+
+  // Generation actions
   startGeneration: () => void;
-  setGenerationStatus: (status: GenerationStatus) => void;
-  setGenerationProgress: (progress: number) => void;
-  setGenerationError: (error: string | null) => void;
+  cancelGeneration: () => void;
   resetGeneration: () => void;
 }
+
+// ─── Defaults ────────────────────────────────────────────────────
 
 const DEFAULT_COLOR_GRADING: ColorGradingSettings = {
   temperature: 0, contrast: 0, saturation: 0, sharpness: 0,
@@ -77,63 +104,123 @@ const POLL_INTERVAL_MS = 2_000;
 
 let activeGenerationAbort: AbortController | null = null;
 
+// ─── Store ───────────────────────────────────────────────────────
+
 export const useCinemaStudioStore = create<CinemaStudioState>((set, get) => ({
+  // ── Domain data ──
   version: "3.0",
+  prompt: "",
+
+  camera: {
+    sensorProfile: "digital_cinema",
+    focalLength: 35,
+    aperture: 2.8,
+    cameraPresetId: null,
+    cameraPresetName: null,
+    motions: [{ presetId: "dolly-in", speed: "linear" }],
+  },
+
+  style: {
+    genre: "general",
+    speed: "linear",
+    selectedEffects: [],
+    colorGrading: DEFAULT_COLOR_GRADING,
+  },
+
+  output: {
+    resolution: "1080p",
+    aspectRatio: "16:9",
+    frameRate: 24,
+  },
+
+  generation: {
+    status: "idle",
+    progress: 0,
+    error: null,
+    jobId: null,
+    resultUrls: [],
+  },
+
+  // ── Domain setters ──
   setVersion: (version) => set({ version }),
-  sensorProfile: "digital_cinema",
-  focalLength: 35,
-  aperture: 2.8,
-  cameraPresetId: null,
-  setSensorProfile: (sensorProfile) => set({ sensorProfile }),
-  setFocalLength: (focalLength) => set({ focalLength }),
-  setAperture: (aperture) => set({ aperture }),
-  setCameraPreset: (cameraPresetId) => set({ cameraPresetId }),
-  motions: [{ presetId: "dolly-in", speed: "linear" }],
+  setPrompt: (prompt) => set({ prompt }),
+
+  updateCamera: (partial) =>
+    set((state) => ({ camera: { ...state.camera, ...partial } })),
+
+  updateStyle: (partial) =>
+    set((state) => ({ style: { ...state.style, ...partial } })),
+
+  updateOutput: (partial) =>
+    set((state) => ({ output: { ...state.output, ...partial } })),
+
+  // ── Camera motion helpers ──
   addMotion: (motion) =>
     set((state) => {
-      if (state.motions.length >= 3) return state;
-      return { motions: [...state.motions, motion] };
+      if (state.camera.motions.length >= 3) return state;
+      return { camera: { ...state.camera, motions: [...state.camera.motions, motion] } };
     }),
+
   removeMotion: (index) =>
-    set((state) => ({ motions: state.motions.filter((_, i) => i !== index) })),
+    set((state) => ({
+      camera: {
+        ...state.camera,
+        motions: state.camera.motions.filter((_, i) => i !== index),
+      },
+    })),
+
   updateMotion: (index, update) =>
     set((state) => ({
-      motions: state.motions.map((m, i) => (i === index ? { ...m, ...update } : m)),
+      camera: {
+        ...state.camera,
+        motions: state.camera.motions.map((m, i) =>
+          i === index ? { ...m, ...update } : m
+        ),
+      },
     })),
-  genre: "general",
-  speed: "linear",
-  setGenre: (genre) => set({ genre }),
-  setSpeed: (speed) => set({ speed }),
-  selectedEffects: [],
-  toggleEffect: (effectId) =>
-    set((state) => ({
-      selectedEffects: state.selectedEffects.includes(effectId)
-        ? state.selectedEffects.filter((id) => id !== effectId)
-        : [...state.selectedEffects, effectId],
-    })),
-  colorGrading: DEFAULT_COLOR_GRADING,
-  setColorGrading: (settings) =>
-    set((state) => ({ colorGrading: { ...state.colorGrading, ...settings } })),
-  resetColorGrading: () => set({ colorGrading: DEFAULT_COLOR_GRADING }),
-  prompt: "",
-  setPrompt: (prompt) => set({ prompt }),
-  resolution: "1080p",
-  aspectRatio: "16:9",
-  frameRate: 24,
-  setResolution: (resolution) => set({ resolution }),
-  setAspectRatio: (aspectRatio) => set({ aspectRatio }),
-  setFrameRate: (frameRate) => set({ frameRate }),
-  generationStatus: "idle",
-  generationProgress: 0,
-  generationError: null,
-  generationResultUrls: [],
 
+  // ── Style helpers ──
+  toggleEffect: (effectId) =>
+    set((state) => {
+      const has = state.style.selectedEffects.includes(effectId);
+      return {
+        style: {
+          ...state.style,
+          selectedEffects: has
+            ? state.style.selectedEffects.filter((id) => id !== effectId)
+            : [...state.style.selectedEffects, effectId],
+        },
+      };
+    }),
+
+  setColorGrading: (settings) =>
+    set((state) => ({
+      style: {
+        ...state.style,
+        colorGrading: { ...state.style.colorGrading, ...settings },
+      },
+    })),
+
+  resetColorGrading: () =>
+    set((state) => ({
+      style: { ...state.style, colorGrading: DEFAULT_COLOR_GRADING },
+    })),
+
+  // ── Generation actions ──
   startGeneration: () => {
     if (activeGenerationAbort) activeGenerationAbort.abort();
     activeGenerationAbort = new AbortController();
     const signal = activeGenerationAbort.signal;
 
-    set({ generationStatus: "pending", generationProgress: 0, generationError: null, generationResultUrls: [] });
+    set({
+      generation: {
+        status: "pending",
+        progress: 0,
+        error: null,
+        jobId: null,
+        resultUrls: [],
+      },
+    });
 
     const s = get();
     const payload = {
@@ -141,16 +228,18 @@ export const useCinemaStudioStore = create<CinemaStudioState>((set, get) => ({
       inputType: "text",
       inputData: { prompt: s.prompt },
       parameters: {
-        camera: { sensorProfile: s.sensorProfile, focalLength: s.focalLength, aperture: s.aperture, cameraPresetId: s.cameraPresetId, motions: s.motions },
-        style: { genre: s.genre, speed: s.speed, selectedEffects: s.selectedEffects, colorGrading: s.colorGrading },
-        output: { resolution: s.resolution, aspectRatio: s.aspectRatio, frameRate: s.frameRate },
+        camera: s.camera,
+        style: s.style,
+        output: s.output,
       },
     };
 
     const timeoutId = setTimeout(() => {
       if (!signal.aborted) {
         activeGenerationAbort?.abort();
-        set({ generationStatus: "failed", generationError: "Request timed out after 30 seconds" });
+        set((state) => ({
+          generation: { ...state.generation, status: "failed", error: "Request timed out after 30 seconds" },
+        }));
       }
     }, GENERATION_TIMEOUT_MS);
 
@@ -158,23 +247,33 @@ export const useCinemaStudioStore = create<CinemaStudioState>((set, get) => ({
       try {
         const job = await apiPost<GenerationJobResponse>("/api/v1/generate", payload, signal);
         if (signal.aborted) return;
-        set({ generationStatus: "processing", generationProgress: 10 });
+
+        set((state) => ({
+          generation: { ...state.generation, status: "processing", progress: 10, jobId: job.id },
+        }));
 
         while (!signal.aborted) {
           await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
           if (signal.aborted) return;
+
           const status = await apiGet<GenerationJobResponse>(`/api/v1/generate/${job.id}`, signal);
           if (signal.aborted) return;
 
           if (status.status === "completed") {
-            set({ generationStatus: "completed", generationProgress: 100, generationResultUrls: status.resultUrls || [] });
+            set((state) => ({
+              generation: { ...state.generation, status: "completed", progress: 100, resultUrls: status.resultUrls || [] },
+            }));
             return;
           }
           if (status.status === "failed") {
-            set({ generationStatus: "failed", generationError: status.errorMessage || "Generation failed" });
+            set((state) => ({
+              generation: { ...state.generation, status: "failed", error: status.errorMessage || "Generation failed" },
+            }));
             return;
           }
-          set((prev) => ({ generationProgress: Math.min(prev.generationProgress + 15, 90) }));
+          set((state) => ({
+            generation: { ...state.generation, progress: Math.min(state.generation.progress + 15, 90) },
+          }));
         }
       } catch (err: unknown) {
         if (signal.aborted) return;
@@ -182,24 +281,31 @@ export const useCinemaStudioStore = create<CinemaStudioState>((set, get) => ({
         const isUnavailable =
           message.includes("Failed to fetch") || message.includes("NetworkError") ||
           message.includes("ECONNREFUSED") || message.includes("ERR_CONNECTION_REFUSED");
-        set({
-          generationStatus: "failed",
-          generationError: isUnavailable
-            ? "Backend unavailable \u2014 start the NestJS server at apps/api"
-            : message,
-        });
+        set((state) => ({
+          generation: {
+            ...state.generation,
+            status: "failed",
+            error: isUnavailable
+              ? "Backend unavailable \u2014 start the NestJS server at apps/api"
+              : message,
+          },
+        }));
       } finally {
         clearTimeout(timeoutId);
       }
     })();
   },
 
-  setGenerationStatus: (generationStatus) => set({ generationStatus }),
-  setGenerationProgress: (generationProgress) => set({ generationProgress }),
-  setGenerationError: (generationError) => set({ generationError }),
+  cancelGeneration: () => {
+    activeGenerationAbort?.abort();
+    activeGenerationAbort = null;
+  },
+
   resetGeneration: () => {
     activeGenerationAbort?.abort();
     activeGenerationAbort = null;
-    set({ generationStatus: "idle", generationProgress: 0, generationError: null, generationResultUrls: [] });
+    set({
+      generation: { status: "idle", progress: 0, error: null, jobId: null, resultUrls: [] },
+    });
   },
 }));

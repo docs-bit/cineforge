@@ -6,15 +6,13 @@ import { useCinemaStudioStore } from "@/stores/cinema-studio-store";
 import { Sparkles, ImagePlus, Loader2 } from "lucide-react";
 
 export function PromptInput() {
-  const {
-    prompt,
-    setPrompt,
-    startGeneration,
-    generationStatus,
-    resolution,
-    aspectRatio,
-    frameRate,
-  } = useCinemaStudioStore();
+  const prompt = useCinemaStudioStore((s) => s.prompt);
+  const setPrompt = useCinemaStudioStore((s) => s.setPrompt);
+  const startGeneration = useCinemaStudioStore((s) => s.startGeneration);
+  const generationStatus = useCinemaStudioStore((s) => s.generation.status);
+  const resolution = useCinemaStudioStore((s) => s.output.resolution);
+  const aspectRatio = useCinemaStudioStore((s) => s.output.aspectRatio);
+  const frameRate = useCinemaStudioStore((s) => s.output.frameRate);
 
   const isGenerating =
     generationStatus === "pending" || generationStatus === "processing";
@@ -52,7 +50,7 @@ export function PromptInput() {
           {frameRate}fps
         </span>
         <span className="ml-auto text-muted-foreground/30">
-          ⌘+Enter to generate
+          Cmd+Enter to generate
         </span>
       </div>
 
@@ -72,7 +70,7 @@ export function PromptInput() {
           </label>
           <textarea
             id="scene-prompt"
-            placeholder="Describe your scene in detail…"
+            placeholder="Describe your scene in detail..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             rows={2}
@@ -111,7 +109,7 @@ export function PromptInput() {
               : "bg-muted text-muted-foreground cursor-not-allowed"
           )}
           aria-label={
-            isGenerating ? "Generating scene…" : "Generate scene"
+            isGenerating ? "Generating scene..." : "Generate scene"
           }
           aria-busy={isGenerating}
         >
@@ -121,7 +119,7 @@ export function PromptInput() {
             <Sparkles className="h-4 w-4" aria-hidden="true" />
           )}
           <span className="hidden sm:inline">
-            {isGenerating ? "Generating…" : "Generate"}
+            {isGenerating ? "Generating..." : "Generate"}
           </span>
         </button>
       </div>

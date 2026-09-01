@@ -6,9 +6,6 @@ import {
   SENSOR_PROFILES,
   FOCAL_LENGTHS,
   APERTURE_STOPS,
-  type SensorProfile,
-  type FocalLength,
-  type ApertureStop,
 } from "@/types/cinema-studio";
 import { CAMERA_PRESETS, PRESET_CATEGORIES } from "@/constants/camera-presets";
 import { useState } from "react";
@@ -41,7 +38,8 @@ function SectionHeader({
 }
 
 function SensorProfileSelector() {
-  const { sensorProfile, setSensorProfile } = useCinemaStudioStore();
+  const sensorProfile = useCinemaStudioStore((s) => s.camera.sensorProfile);
+  const updateCamera = useCinemaStudioStore((s) => s.updateCamera);
 
   return (
     <div className="space-y-2">
@@ -50,7 +48,7 @@ function SensorProfileSelector() {
         {SENSOR_PROFILES.map((sp) => (
           <button
             key={sp.id}
-            onClick={() => setSensorProfile(sp.id)}
+            onClick={() => updateCamera({ sensorProfile: sp.id })}
             className={cn(
               "flex flex-col items-center gap-1 rounded-md p-2 text-xs transition-colors",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
@@ -72,7 +70,8 @@ function SensorProfileSelector() {
 }
 
 function FocalLengthSelector() {
-  const { focalLength, setFocalLength } = useCinemaStudioStore();
+  const focalLength = useCinemaStudioStore((s) => s.camera.focalLength);
+  const updateCamera = useCinemaStudioStore((s) => s.updateCamera);
 
   return (
     <div className="space-y-2">
@@ -85,7 +84,7 @@ function FocalLengthSelector() {
         {FOCAL_LENGTHS.map((fl) => (
           <button
             key={fl}
-            onClick={() => setFocalLength(fl)}
+            onClick={() => updateCamera({ focalLength: fl })}
             className={cn(
               "flex-1 rounded-md py-1.5 text-[10px] font-mono transition-colors",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
@@ -111,7 +110,8 @@ function FocalLengthSelector() {
 }
 
 function ApertureSelector() {
-  const { aperture, setAperture } = useCinemaStudioStore();
+  const aperture = useCinemaStudioStore((s) => s.camera.aperture);
+  const updateCamera = useCinemaStudioStore((s) => s.updateCamera);
 
   return (
     <div className="space-y-2">
@@ -124,7 +124,7 @@ function ApertureSelector() {
         {APERTURE_STOPS.map((f) => (
           <button
             key={f}
-            onClick={() => setAperture(f)}
+            onClick={() => updateCamera({ aperture: f })}
             className={cn(
               "flex-1 rounded-md py-1.5 text-[10px] font-mono transition-colors",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
@@ -150,7 +150,8 @@ function ApertureSelector() {
 }
 
 function CameraPresetBrowser() {
-  const { cameraPresetId, setCameraPreset } = useCinemaStudioStore();
+  const cameraPresetId = useCinemaStudioStore((s) => s.camera.cameraPresetId);
+  const updateCamera = useCinemaStudioStore((s) => s.updateCamera);
   const [search, setSearch] = useState("");
   const [openCategory, setOpenCategory] = useState<string | null>("dolly");
 
@@ -174,7 +175,7 @@ function CameraPresetBrowser() {
         />
         <input
           type="text"
-          placeholder="Search presets…"
+          placeholder="Search presets..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           autoComplete="off"
@@ -223,9 +224,10 @@ function CameraPresetBrowser() {
                     <TooltipTrigger>
                       <button
                         onClick={() =>
-                          setCameraPreset(
-                            cameraPresetId === preset.id ? null : preset.id
-                          )
+                          updateCamera({
+                            cameraPresetId: cameraPresetId === preset.id ? null : preset.id,
+                            cameraPresetName: cameraPresetId === preset.id ? null : preset.name,
+                          })
                         }
                         className={cn(
                           "w-full rounded-md px-2.5 py-1.5 text-left text-xs transition-colors",
