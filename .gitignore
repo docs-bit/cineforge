@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# API build output
+/apps/api/dist/
+/apps/api/node_modules/
+/apps/api/package-lock.json
+
+# Planning & research artifacts
+/docs/
+*.py
+*.png
+findings.md
+progress.md
+task_plan.md
