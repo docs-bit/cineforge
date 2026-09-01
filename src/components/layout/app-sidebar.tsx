@@ -7,11 +7,6 @@ import {
   Film,
   LayoutDashboard,
   Clapperboard,
-  Megaphone,
-  Presentation,
-  Popcorn,
-  Cpu,
-  Settings,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -21,11 +16,6 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/studio/cinema", label: "Cinema Studio", icon: Film },
   { href: "/canvas", label: "Canvas", icon: Clapperboard },
-  { href: "/studio/marketing", label: "Marketing Studio", icon: Megaphone },
-  { href: "/explainer", label: "Explainer", icon: Presentation },
-  { href: "/popcorn", label: "Popcorn", icon: Popcorn },
-  { href: "/supercomputer", label: "Supercomputer", icon: Cpu },
-  { href: "/admin", label: "Admin", icon: Settings },
 ];
 
 export function AppSidebar() {

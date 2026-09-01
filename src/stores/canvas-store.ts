@@ -45,6 +45,11 @@ const NODE_DEFAULTS: Record<CanvasNodeType, NodeData> = {
 
 let nodeIdCounter = 0;
 
+function truncatePrompt(text: string, maxLen = 50): string {
+  if (text.length <= maxLen) return text;
+  return text.slice(0, maxLen - 1) + "\u2026";
+}
+
 export const useCanvasStore = create<CanvasStore>((set, get) => ({
   nodes: [],
   edges: [],
@@ -60,6 +65,61 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   },
 
   onConnect: (connection) => {
+    const { nodes } = get();
+
+    // Find source and target nodes
+    const sourceNode = nodes.find((n) => n.id === connection.source);
+    const targetNode = nodes.find((n) => n.id === connection.target);
+
+    // When connecting a Prompt node to a Generation node, copy prompt text
+    if (sourceNode?.type === "prompt" && targetNode?.type === "generation") {
+      const promptText = (sourceNode.data as any).prompt || "";
+      if (promptText) {
+        const preview = truncatePrompt(promptText);
+        set({
+          edges: addEdge({ ...connection, type: "custom" }, get().edges),
+          nodes: get().nodes.map((n) =>
+            n.id === targetNode.id
+              ? {
+                  ...n,
+                  data: {
+                    ...n.data,
+                    parameters: { ...(n.data as any).parameters, prompt: promptText },
+                    label: "Generation: " + preview,
+                  },
+                }
+              : n
+          ),
+        });
+        return;
+      }
+    }
+
+    // When connecting any node with text content to a Generation node
+    if (targetNode?.type === "generation" && sourceNode) {
+      const sourceData = sourceNode.data as any;
+      const promptText = sourceData.prompt || sourceData.condition || "";
+      if (promptText) {
+        const preview = truncatePrompt(promptText);
+        set({
+          edges: addEdge({ ...connection, type: "custom" }, get().edges),
+          nodes: get().nodes.map((n) =>
+            n.id === targetNode.id
+              ? {
+                  ...n,
+                  data: {
+                    ...n.data,
+                    parameters: { ...(n.data as any).parameters, prompt: promptText },
+                    label: "Generation: " + preview,
+                  },
+                }
+              : n
+          ),
+        });
+        return;
+      }
+    }
+
     set({ edges: addEdge({ ...connection, type: "custom" }, get().edges) });
   },
 
